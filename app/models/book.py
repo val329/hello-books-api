@@ -25,3 +25,11 @@ class Book(db.Model):
         book = Book(title=book_data["title"], description=book_data["description"])
 
         return book
+
+    def to_dict(self):
+
+         return {
+                "id": self.id,
+                "title": self.title,
+                "description": self.description,
+            }
