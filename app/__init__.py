@@ -1,6 +1,6 @@
 from flask import Flask
 from .routes.hello_world_routes import hello_world_bp
-from .routes.book_routes import books_bp
+from .routes.book_routes import bp as books_bp
 from .db import db, migrate
 from .models import book # Newly added import
 import os
