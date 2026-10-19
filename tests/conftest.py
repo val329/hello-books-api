@@ -45,3 +45,4 @@ def two_saved_books(app):
     # db.session.add(ocean_book)
     # db.session.add(mountain_book)
     db.session.commit()
+    return [ocean_book, mountain_book]
