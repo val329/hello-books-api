@@ -8,11 +8,17 @@ books_bp = Blueprint("books", __name__, url_prefix="/books")
 
 @books_bp.post("")
 def create_book():
-    request_body = request.get_json()
-    title = request_body["title"]
-    description = request_body["description"]
 
-    new_book = Book(title=title, description=description)
+    request_body = request.get_json()
+
+    try: 
+        title = request_body["title"]
+        description = request_body["description"]
+        new_book = Book(title=title, description=description)
+    except KeyError as e:
+        response = {"message": f"Invalid data: missing key {e.args[0]}"}
+        abort(make_response(response, 400))
+
     db.session.add(new_book)
     db.session.commit()
 
@@ -25,7 +31,8 @@ def create_book():
 
 
 @books_bp.get("")
-def get_books():
+def get_all_books():
+    
     response = []
 
     query = db.select(Book)
