@@ -12,9 +12,9 @@ def create_book():
     request_body = request.get_json()
 
     try: 
-        title = request_body["title"]
-        description = request_body["description"]
-        new_book = Book(title=title, description=description)
+        # title = request_body["title"]
+        # description = request_body["description"]
+        new_book = Book.from_dict(request_body)
     except KeyError as e:
         response = {"message": f"Invalid data: missing key {e.args[0]}"}
         abort(make_response(response, 400))
@@ -22,12 +22,7 @@ def create_book():
     db.session.add(new_book)
     db.session.commit()
 
-    response = {
-        "id": new_book.id,
-        "title": new_book.title,
-        "description": new_book.description,
-    }
-    return response, 201
+    return new_book.to_dict(), 201
 
 
 @books_bp.get("")
@@ -49,13 +44,7 @@ def get_all_books():
     books = db.session.scalars(query)
 
     for book in books:
-        response.append(
-            {
-            "id": book.id,
-            "title": book.title,
-            "description": book.description,
-            }
-        )
+        response.append(book.to_dict())
     return response
 
 
@@ -63,11 +52,7 @@ def get_all_books():
 def get_book(book_id):
     book = validate_book(book_id)
 
-    return {
-        "id": book.id,
-        "title": book.title,
-        "description": book.description,
-    }
+    return book.to_dict()
 
 
 @books_bp.put("/<book_id>")
