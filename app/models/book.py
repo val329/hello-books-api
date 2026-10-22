@@ -1,16 +1,6 @@
-# class Book:
-#     def __init__(self, id, title, description):
-#         self.id = id
-#         self.title = title
-#         self.description = description
-
-# books = [
-#     Book(id=1, title="The Great Gatsby", description="A classic novel about the American Dream."),
-#     Book(id=2, title="To Kill a Mockingbird", description="A novel about racial injustice in the Deep South."),
-#     Book(id=3, title="1984", description="A dystopian novel about a totalitarian society.")
-# ]
-
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey
+from typing import Optional
 from ..db import db
 
 
@@ -18,18 +8,27 @@ class Book(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     title: Mapped[str]
     description: Mapped[str]
+    author_id: Mapped[Optional[int]] = mapped_column(ForeignKey("author.id"))
+    author: Mapped[Optional["Author"]] = relationship(back_populates="books")
 
+    def to_dict(self):
+        result = {}
+        result["id"] = self.id
+        result["title"] = self.title
+        result["description"] = self.description
+
+        if self.author: 
+            result["author"] = self.author.name
+        return result
 
     @classmethod
     def from_dict(cls, book_data):
-        book = Book(title=book_data["title"], description=book_data["description"])
+        new_book = Book(
+            title=book_data["title"],
+            description=book_data["description"],
+            author_id=book_data.get("author_id"),
+        )
 
-        return book
+        return new_book
 
-    def to_dict(self):
 
-         return {
-                "id": self.id,
-                "title": self.title,
-                "description": self.description,
-            }
