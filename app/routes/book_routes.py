@@ -1,51 +1,29 @@
-from flask import Blueprint, abort, make_response, request, Response
+from flask import Blueprint, request, Response
 from app.models.book import Book
-from .route_utilities import validate_model
+from .route_utilities import validate_model, add_model, get_models_with_filters
 from ..db import db
-
 
 # 1. Define the blueprint
 bp = Blueprint("books", __name__, url_prefix="/books")
+
 
 @bp.post("")
 def create_book():
 
     request_body = request.get_json()
+    book = add_model(Book, request_body)
 
-    try: 
-        # title = request_body["title"]
-        # description = request_body["description"]
-        new_book = Book.from_dict(request_body)
-    except KeyError as e:
-        response = {"message": f"Invalid data: missing key {e.args[0]}"}
-        abort(make_response(response, 400))
-
-    db.session.add(new_book)
-    db.session.commit()
-
-    return new_book.to_dict(), 201
+    return book
 
 
 @bp.get("")
 def get_all_books():
-    
+
     response = []
-
-    query = db.select(Book)
-
-    title_param = request.args.get("title")
-    if title_param:
-        query = query.where(Book.title.ilike(f"%{title_param}%"))
-    
-    description_param = request.args.get("description")
-    if description_param:
-        query = query.where(Book.description.ilike(f"%{description_param}%"))
-
-    query = query.order_by(Book.id)
-    books = db.session.scalars(query)
+    books = get_models_with_filters(Book, request.args)
 
     for book in books:
-        response.append(book.to_dict())
+        response.append(book)
     return response
 
 
@@ -64,6 +42,8 @@ def update_book(book_id):
 
     book.title = request_body["title"]
     book.description = request_body["description"]
+    if request_body.get("author_id"):
+        book.description = request_body["author_id"]
     db.session.commit()
 
     return Response(status=204, mimetype="application/json")
@@ -79,10 +59,7 @@ def delete_book(book_id):
     return Response(status=204, mimetype="application/json")
 
 
-
-
-
-'''
+"""
 # When combined with the book_bp's url_prefix, "/books", we see this endpoint is a GET to /books.
 # URIs are sensitive to the use of / and Flask will throw an error if we define this route as "/"
 # but try to access it as /books. A URI ending in / is different from a URI that doesn't end in /, so we should use "".
@@ -102,4 +79,4 @@ def get_books():
 # by default if we return a dictionary, flask sets 200 response. to override use tuple
 
 
-'''
+"""
