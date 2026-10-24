@@ -10,6 +10,9 @@ class Book(db.Model):
     description: Mapped[str]
     author_id: Mapped[Optional[int]] = mapped_column(ForeignKey("author.id"))
     author: Mapped[Optional["Author"]] = relationship(back_populates="books")
+    genres: Mapped[list["Genre"]] = relationship(
+        secondary="book_genre", back_populates="books"
+    )
 
     def to_dict(self):
         result = {}
@@ -17,18 +20,23 @@ class Book(db.Model):
         result["title"] = self.title
         result["description"] = self.description
 
-        if self.author: 
+        if self.author:
             result["author"] = self.author.name
+
+        if self.genres:
+            result["genres"] = [genre.name for genre in self.genres]
         return result
 
     @classmethod
     def from_dict(cls, book_data):
-        new_book = Book(
+        author_id = book_data.get("author_id")
+        genres = book_data.get("genres", [])
+
+        new_book = cls(
             title=book_data["title"],
             description=book_data["description"],
-            author_id=book_data.get("author_id"),
+            author_id=author_id,
+            genres=genres,
         )
 
         return new_book
-
-
